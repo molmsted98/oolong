@@ -1,10 +1,18 @@
 buildscript {
     repositories {
-        jcenter()
+        google()
+        mavenCentral()
     }
     dependencies {
-        classpath(deps.kotlin.gradle.plugin)
-        classpath(deps.dokka.gradle.plugin)
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
+        classpath("com.vanniktech:gradle-maven-publish-plugin:0.17.0")
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+    }
+}

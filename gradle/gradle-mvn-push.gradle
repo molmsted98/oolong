@@ -1,30 +1,33 @@
-apply plugin: "com.vanniktech.maven.publish"
-apply plugin: "org.jetbrains.dokka"
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven-publish'
 
-tasks.named("dokkaGfm").configure {
-    outputDirectory = file("$rootDir/docs/oolong")
-}
-
-mavenPublish {
-    releaseSigningEnabled = !getGpgKey().isEmpty()
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "installLocally"
-            url = "${rootProject.buildDir}/localMaven"
-        }
+static def selectArtifactId(project, type, defaultName) {
+    def name = project.name
+    def isCommon = project.ext.has("commonStructure")
+    def commonIsRoot = project.ext.has("commonStructure") && project.ext.commonStructure
+    def hasNative = project.ext.has("hasNative") && project.ext.hasNative
+    switch (type) {
+        case 'metadata':
+            if (!isCommon) return "$name-$type"
+            return "$name-metadata"
+            break
+        case 'kotlinMultiplatform':
+            if (!hasNative) return "$name-kotlinMultiplatform"
+            return name
+            break
+        case 'jvm':
+            return commonIsRoot ? "$name-jvm" : "$name"
+            break
+        default:
+            return isCommon || hasNative ? defaultName : "$name"
+            break
     }
 }
 
-def getGpgKey() {
-    return hasProperty('signingKey') ? signingKey : ""
-}
-
-signing {
-    def signingKey = getGpgKey()
-    if (!signingKey.isEmpty()) {
-        useInMemoryPgpKeys(signingKey, "")
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            it.artifactId = selectArtifactId(project, it.name, it.artifactId)
+        }
     }
 }
